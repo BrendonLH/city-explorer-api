@@ -18,6 +18,9 @@ app.get( '/test', (request, response) => {
 });
 
 app.get('/location', handleLocation);
+app.get('/weather', handleWeather);
+
+
 
 
 function handleLocation( request, response) {
@@ -35,7 +38,6 @@ function Location(city, data) {
   this.longitude = data.lon;
 }
 
-app.get('/weather', handleWeather);
 
 function handleWeather( request, response) {
   let weatherList = [];
@@ -53,5 +55,9 @@ function Weather(data) {
   this.time = data.time;
 }
 
+function errorFunc(error, request, response) {
+  response.status(500).send(error);
+}
+app.use(errorFunc);
 
 app.listen(PORT, () => console.log('server up on', PORT));
