@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const cors = require('cors');
 const express = require('express');
-
+const superagent = require('superagent');
 const PORT = process.env.PORT;
 
 const app = express();
@@ -26,9 +26,24 @@ app.get('/weather', handleWeather);
 function handleLocation( request, response) {
   let city = request.query.city;
   let fixedData = require('./data/geo.json');
-  let location = new Location(city,fixedData[0]);
-  //   console.log(location);
-  response.json(location);
+
+  const url = 'https://us1.locationiq.com/v1/search.php';
+  const queryStringParams = {
+    key: process.env.LOCATION_IQ,
+    q : city,
+    format: 'json',
+    limit: 1,
+  };
+
+  console.log(url);
+  console.log(queryStringParams);
+  superagent.get(url)
+    .query(queryStringParams)
+    .then( data => {
+      let locationData = data.body[0];
+      let location = new Location(city,locationData);
+      response.json(location);
+    });
 }
 
 function Location(city, data) {
@@ -55,9 +70,9 @@ function Weather(data) {
   this.time = data.time;
 }
 
-function errorFunc(error, request, response) {
-  response.status(500).send(error);
-}
-app.use(errorFunc);
+// function errorFunc(error, request, response) {
+//   response.status(500).send(error);
+// }
+// app.use(errorFunc);
 
 app.listen(PORT, () => console.log('server up on', PORT));
