@@ -91,7 +91,7 @@ Your README.md must include:
 # Project Name
 
 **Author**: Brendon Hmpton
-**Version**: 1.0.0 (increment the patch/fix version number if you make more commits past your first submission)
+**Version**: 1.0.1 (increment the patch/fix version number if you make more commits past your first submission)
 
 ## Overview
 <!-- Provide a high level overview of what this application is and why you are building it, beyond the fact that it's an assignment for this class. (i.e. What's your problem domain?) -->
@@ -103,6 +103,7 @@ step 1. setup the local server with npm install
 step 2. install all necessary cors,express, dotenv.
 step 3. get all necessary json or data files
 step 4. grab all data from json to be displayed
+step 5. change from using json locally to using API from locationIQ to render map data.
 
 ## Architecture
 <!-- Provide a detailed description of the application design. What technologies (languages, libraries, etc) you're using, and any other relevant design information. -->
@@ -110,6 +111,8 @@ languages used: javascript, HTML, CSS, express, node.js, dotenv.
 
 ## Change Log
 <!-- Use this area to document the iterative changes made to your application as each feature is successfully implemented. Use time stamps. Here's an examples:
+
+4/11/2020 6:25pm - refactored code to implement city change from locationIQ API
 4/10/2020 9:32pm - Application is now fully functional
 4/10/2020 8:32pm - Error func is working (505)
 4/10/2020 7:32pm - Weather feature is complete
