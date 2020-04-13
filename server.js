@@ -60,9 +60,9 @@ function handleWeather(request, response) {
   const weatherAPI = process.env.DARKSKY_API_KEY;
   let {latitude,} = request.query;
   let {longitude,} = request.query;
-  let urlLocation = `https://api.darksky.net/forecast/${weatherAPI}/${latitude},${longitude}`;
+  let weatherURL = `https://api.darksky.net/forecast/${weatherAPI}/${latitude},${longitude}`;
 
-  superagent.get(urlLocation)
+  superagent.get(weatherURL)
     .then(result => {
       let data = result.body.daily.data;
       let dailyWeather = data.map(value => {
