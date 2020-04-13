@@ -17,8 +17,11 @@ app.get( '/test', (request, response) => {
   response.send(`this is ${name}`);
 });
 
+
+// call the handler functions
 app.get('/location', handleLocation);
 app.get('/weather', handleWeather);
+app.get('/trails', handleTrails);
 
 
 // LOCATION
@@ -46,6 +49,7 @@ function handleLocation( request, response) {
     });
 }
 
+// lacation constructor
 function Location(city, data) {
   this.searchQuery = city;
   this.formattedQuery = data.display_name;
@@ -72,9 +76,35 @@ function handleWeather(request, response) {
     });
 }
 
+// weather constructor
 function Weather(data) {
   this.forecast = data.summary;
   this.time = data.time;
+}
+
+// TRAILS
+function handleTrails(request, response) {
+  const trailAPI = process.env.TRAIL_API_KEY;
+  let {latitude,} = request.query;
+  let {longitude,} = request.query;
+  let trailsURL = `https://www.hikingproject.com/data/get-trails?lat=${latitude}&lon=${longitude}&maxDistance=10&key=${trailAPI}`;
+  superagent.get(trailsURL)
+    .then(result => {
+      let parsedTrails = JSON.parse(result.text);
+      let trailList = parsedTrails.trails.map(value => {
+        return new Trails(value);
+      });
+      response.status(200).send(trailList);
+    });
+}
+
+// trails constructor
+function Trails(trail) {
+  this.name = trail.name;
+  this.location = trail.location;
+  this.length = trail.length;
+  this.difficulty = trail.difficulty;
+  this.rating = trail.stars;
 }
 
 // function errorFunc(error, request, response) {

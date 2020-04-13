@@ -111,7 +111,7 @@ languages used: javascript, HTML, CSS, express, node.js, dotenv.
 
 ## Change Log
 <!-- Use this area to document the iterative changes made to your application as each feature is successfully implemented. Use time stamps. Here's an examples:
-
+4/12/2020 8:06pm - finished trails and weather API calls
 4/11/2020 6:25pm - refactored code to implement city change from locationIQ API
 4/10/2020 9:32pm - Application is now fully functional
 4/10/2020 8:32pm - Error func is working (505)
@@ -124,7 +124,7 @@ languages used: javascript, HTML, CSS, express, node.js, dotenv.
 
 ## Credits and Collaborations
 
-jin kim--from code 401 C# course helped with the error function, Chuck li villaboos helped fix my syntax errors and debug
+jin kim--from code 401 C# course helped with the error function and helped with doing a parse so i can display the data from trails, Chuck li villaboos helped fix my syntax errors and debug
 <!-- Give credit (and a link) to other people or resources that helped you build this application. -->
 -->
 Submission Instructions
