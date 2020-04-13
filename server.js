@@ -21,15 +21,15 @@ app.get('/location', handleLocation);
 app.get('/weather', handleWeather);
 
 
-
+// LOCATION
 
 function handleLocation( request, response) {
   let city = request.query.city;
-  let fixedData = require('./data/geo.json');
+  // let fixedData = require('./data/geo.json');
 
   const url = 'https://us1.locationiq.com/v1/search.php';
   const queryStringParams = {
-    key: process.env.LOCATION_IQ,
+    key: process.env.GEOCODE_API_KEY,
     q : city,
     format: 'json',
     limit: 1,
@@ -47,22 +47,29 @@ function handleLocation( request, response) {
 }
 
 function Location(city, data) {
-  this.search_query = city;
-  this.formatted_query = data.display_name;
+  this.searchQuery = city;
+  this.formattedQuery = data.display_name;
   this.latitude = data.lat;
   this.longitude = data.lon;
 }
 
 
-function handleWeather( request, response) {
-  let weatherList = [];
-  let weatherData = require('./data/darksky.json');
-  weatherData.daily.data.forEach(w => {
-    let weather = new Weather(w);
-    weatherList.push(weather);
-    console.log(w);
-  });
-  response.json(weatherList);
+// WEATHER
+
+function handleWeather(request, response) {
+  const weatherAPI = process.env.DARKSKY_API_KEY;
+  let {latitude,} = request.query;
+  let {longitude,} = request.query;
+  let weatherURL = `https://api.darksky.net/forecast/${weatherAPI}/${latitude},${longitude}`;
+
+  superagent.get(weatherURL)
+    .then(result => {
+      let data = result.body.daily.data;
+      let dailyWeather = data.map(value => {
+        return new Weather(value);
+      });
+      response.status(200).send(dailyWeather);
+    });
 }
 
 function Weather(data) {
