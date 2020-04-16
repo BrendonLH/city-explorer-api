@@ -7,6 +7,9 @@ const express = require('express');
 const superagent = require('superagent');
 const PORT = process.env.PORT;
 
+// empty cache for location
+let locationCache = {};
+
 const app = express();
 
 app.use(cors());
@@ -27,8 +30,15 @@ app.get('/trails', handleTrails);
 // LOCATION
 
 function handleLocation( request, response) {
-  let city = request.query.city;
-  // let fixedData = require('./data/geo.json');
+  let city = request.query.city.toLowerCase();
+  console.log('CurrentCache');
+  console.log(locationCache);
+  console.log('------------');
+  if( locationCache[city]) {
+    console.log(city, 'came from already stored memory');
+    response.json(locationCache[city]);
+    return;
+  }
 
   const url = 'https://us1.locationiq.com/v1/search.php';
   const queryStringParams = {
@@ -38,13 +48,14 @@ function handleLocation( request, response) {
     limit: 1,
   };
 
-  console.log(url);
+  // console.log(url);
   console.log(queryStringParams);
   superagent.get(url)
     .query(queryStringParams)
     .then( data => {
       let locationData = data.body[0];
       let location = new Location(city,locationData);
+      locationCache[city] = location;
       response.json(location);
     });
 }
