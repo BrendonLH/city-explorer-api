@@ -5,30 +5,45 @@ require('dotenv').config();
 const cors = require('cors');
 const express = require('express');
 const superagent = require('superagent');
+const pg = require('pg');
 const PORT = process.env.PORT;
+
+// connect to database
+const client = new pg.Client(process.env.DATABASE_URL);
+
+
+// empty cache for location
+let locationCache = {};
 
 const app = express();
 
 app.use(cors());
 // console.log(process.env.PORT);
 
-app.get( '/test', (request, response) => {
-  const name = request.query.name;
-  response.send(`this is ${name}`);
-});
+
 
 
 // call the handler functions
-app.get('/location', handleLocation);
 app.get('/weather', handleWeather);
 app.get('/trails', handleTrails);
+app.get('/location', handleLocation);
 
 
 // LOCATION
 
+
 function handleLocation( request, response) {
+  console.log(request.query);
   let city = request.query.city;
-  // let fixedData = require('./data/geo.json');
+  console.log('CurrentCache');
+  console.log('location');
+  console.log(locationCache);
+  console.log('------------');
+  if( locationCache[city]) {
+    console.log(city, 'came from already stored memory');
+    response.json(locationCache[city]);
+    return;
+  }
 
   const url = 'https://us1.locationiq.com/v1/search.php';
   const queryStringParams = {
@@ -38,18 +53,23 @@ function handleLocation( request, response) {
     limit: 1,
   };
 
-  console.log(url);
+  console.log(url, 'this is before superagent');
   console.log(queryStringParams);
   superagent.get(url)
     .query(queryStringParams)
     .then( data => {
+      console.log('this is inside superagent');
       let locationData = data.body[0];
       let location = new Location(city,locationData);
+      let SQL = 'INSERT INTO city (city_name, lattitude, longitude) VALUES ($1, $2, $3);';
+      let safeVal = [location.searchQuery, location.latitude, location.longitude];
+      client.query(SQL, safeVal);
+      locationCache[city] = location;
       response.json(location);
     });
 }
 
-// lacation constructor
+// location constructor
 function Location(city, data) {
   this.searchQuery = city;
   this.formattedQuery = data.display_name;
@@ -62,6 +82,7 @@ function Location(city, data) {
 
 function handleWeather(request, response) {
   const weatherAPI = process.env.DARKSKY_API_KEY;
+  console.log('weather');
   let {latitude,} = request.query;
   let {longitude,} = request.query;
   let weatherURL = `https://api.darksky.net/forecast/${weatherAPI}/${latitude},${longitude}`;
@@ -84,6 +105,7 @@ function Weather(data) {
 
 // TRAILS
 function handleTrails(request, response) {
+  console.log('trails');
   const trailAPI = process.env.TRAIL_API_KEY;
   let {latitude,} = request.query;
   let {longitude,} = request.query;
@@ -110,12 +132,16 @@ function Trails(trail) {
   this.conditions = trail.conditionDetails;
   this.condition_date = trail.conditionDate.slice(0,10);
   this.condition_time = trail.conditionDate.slice(11,18);
-
 }
 
 // function errorFunc(error, request, response) {
 //   response.status(500).send(error);
 // }
 // app.use(errorFunc);
+
+// client.on('error', err => console.error(err));
+// client.connect()
+//   .then(
+//     .catch(err => console.error(err));
 
 app.listen(PORT, () => console.log('server up on', PORT));
