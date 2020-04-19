@@ -12,38 +12,24 @@ const PORT = process.env.PORT;
 const client = new pg.Client(process.env.DATABASE_URL);
 
 
-// empty cache for location
-let locationCache = {};
-
 const app = express();
-
 app.use(cors());
-// console.log(process.env.PORT);
 
 
+// client.connect();
 
 
-// call the handler functions
+// function routes
 app.get('/weather', handleWeather);
 app.get('/trails', handleTrails);
 app.get('/location', handleLocation);
 
 
-// LOCATION
-
-
+// LOCATION handler
+console.log('before location');
 function handleLocation( request, response) {
-  console.log(request.query);
+  console.log('Location handler');
   let city = request.query.city;
-  console.log('CurrentCache');
-  console.log('location');
-  console.log(locationCache);
-  console.log('------------');
-  if( locationCache[city]) {
-    console.log(city, 'came from already stored memory');
-    response.json(locationCache[city]);
-    return;
-  }
 
   const url = 'https://us1.locationiq.com/v1/search.php';
   const queryStringParams = {
@@ -53,26 +39,46 @@ function handleLocation( request, response) {
     limit: 1,
   };
 
-  console.log(url, 'this is before superagent');
-  console.log(queryStringParams);
-  superagent.get(url)
-    .query(queryStringParams)
-    .then( data => {
-      console.log('this is inside superagent');
-      let locationData = data.body[0];
-      let location = new Location(city,locationData);
-      let SQL = 'INSERT INTO city (city_name, lattitude, longitude) VALUES ($1, $2, $3);';
-      let safeVal = [location.searchQuery, location.latitude, location.longitude];
-      client.query(SQL, safeVal);
-      locationCache[city] = location;
-      response.json(location);
+  const searchSQL = ` SELECT * FROM city WHERE city_name = $1`;
+  const searchValues = [city];
+  client.query(searchSQL, searchValues)
+    .then(results => {
+      console.log(results);
+      if (results.rowCount >= 1) {
+        console.log(`${city} came from database request`);
+        console.log(results.rows[0]);
+        response.json(results.rows[0]);
+      } else {
+        superagent.get(url)
+          .query(queryStringParams)
+          .then( data => {
+            let locationData = data.body[0];
+            console.log(locationData);
+            let location = new Location(city,locationData);
+            console.log(`${city} came from API`);
+            let SQL = `INSERT INTO city (city_name, formatted_query, latitude, longitude) VALUES ($1, $2, $3, $4) RETURNING * `;
+            let saveVal = [location.search_query, location.formatted_query, location.latitude, location.longitude];
+            client.query(SQL, saveVal)
+              .then( result => {
+                response.json(result);
+              });
+          });
+      }
+    })
+    .catch(error => {
+      let err = {
+        status:500,
+        responseErr: 'something went wrong',
+      };
+      response.status(500).json(err);
     });
+
 }
 
 // location constructor
 function Location(city, data) {
-  this.searchQuery = city;
-  this.formattedQuery = data.display_name;
+  this.search_query = city;
+  this.formatted_query = data.display_name;
   this.latitude = data.lat;
   this.longitude = data.lon;
 }
@@ -82,9 +88,9 @@ function Location(city, data) {
 
 function handleWeather(request, response) {
   const weatherAPI = process.env.DARKSKY_API_KEY;
-  console.log('weather');
-  let {latitude,} = request.query;
-  let {longitude,} = request.query;
+  console.log('weather handler');
+  let latitude = request.query.latitude;
+  let longitude = request.query.longitude;
   let weatherURL = `https://api.darksky.net/forecast/${weatherAPI}/${latitude},${longitude}`;
 
   superagent.get(weatherURL)
@@ -105,10 +111,10 @@ function Weather(data) {
 
 // TRAILS
 function handleTrails(request, response) {
-  console.log('trails');
+  console.log('trails handler');
   const trailAPI = process.env.TRAIL_API_KEY;
-  let {latitude,} = request.query;
-  let {longitude,} = request.query;
+  let latitude = request.query.latitude;
+  let longitude = request.query.longitude;
   let trailsURL = `https://www.hikingproject.com/data/get-trails?lat=${latitude}&lon=${longitude}&maxDistance=10&key=${trailAPI}`;
   superagent.get(trailsURL)
     .then(result => {
@@ -140,8 +146,7 @@ function Trails(trail) {
 // app.use(errorFunc);
 
 // client.on('error', err => console.error(err));
-// client.connect()
-//   .then(
-//     .catch(err => console.error(err));
-
-app.listen(PORT, () => console.log('server up on', PORT));
+client.connect((err) => {
+  if (err) console.log(`${err} you are broken`);
+  else app.listen(PORT, () => console.log(`Server is live on Port ${PORT}`));
+});
