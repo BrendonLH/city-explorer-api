@@ -16,13 +16,13 @@ const app = express();
 app.use(cors());
 
 
-// client.connect();
 
 
 // function routes
 app.get('/weather', handleWeather);
 app.get('/trails', handleTrails);
 app.get('/location', handleLocation);
+app.get('/movies', handleMovies);
 
 
 // LOCATION handler
@@ -140,13 +140,44 @@ function Trails(trail) {
   this.condition_time = trail.conditionDate.slice(11,18);
 }
 
+
+// movies handler
+function handleMovies(request, response) {
+  const movieAPI = process.env.MOVIE_API_KEY;
+  let searchQuery = request.query.search_query;
+  let movieURL = `https://api.themoviedb.org/3/movie/550?api_key=${movieAPI}&query=${searchQuery}`;
+  superagent.get(movieURL)
+    .then(result => {
+      let movieResult = result.body.results;
+      let moovieList = movieResult.map(value => {
+        return new Movies(value);
+      });
+      response.json(moovieList);
+    })
+    .catch(error => console.log('this is a movie error', error));
+}
+
+//  movie constructor
+function Movies(movie) {
+  this.title = movie.title;
+  this.overview = movie.overview;
+  this.average_votes = movie.averageVotes;
+  this.total_votes = movie.totalVotes;
+  this.image_url= `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+  this.popularity = movie.popularity;
+  this.release_on = movie.released;
+}
+// yelp
+
+
 // function errorFunc(error, request, response) {
 //   response.status(500).send(error);
 // }
 // app.use(errorFunc);
 
 // client.on('error', err => console.error(err));
-client.connect((err) => {
-  if (err) console.log(`${err} you are broken`);
-  else app.listen(PORT, () => console.log(`Server is live on Port ${PORT}`));
-});
+// client.connect((err) => {
+//   if (err) console.log(`${err} you are broken`);
+//   else 
+// });
+app.listen(PORT, () => console.log(`Server is live on Port ${PORT}`));
