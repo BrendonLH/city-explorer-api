@@ -143,9 +143,10 @@ function Trails(trail) {
 
 // movies handler
 function handleMovies(request, response) {
+  console.log('movie handler');
   const movieAPI = process.env.MOVIE_API_KEY;
   let searchQuery = request.query.search_query;
-  let movieURL = `https://api.themoviedb.org/3/movie/550?api_key=${movieAPI}&query=${searchQuery}`;
+  let movieURL = `https://api.themoviedb.org/3/search/movie?language=en-US&api_key=${movieAPI}&query=${searchQuery}`;
   superagent.get(movieURL)
     .then(result => {
       let movieResult = result.body.results;
@@ -161,14 +162,17 @@ function handleMovies(request, response) {
 function Movies(movie) {
   this.title = movie.title;
   this.overview = movie.overview;
-  this.average_votes = movie.averageVotes;
-  this.total_votes = movie.totalVotes;
-  this.image_url= `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+  this.average_votes = movie.vote_average;
+  this.total_votes = movie.vote_count;
+  this.image_url = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
   this.popularity = movie.popularity;
-  this.release_on = movie.released;
+  this.released_on = movie.release_date;
 }
 // yelp
 
+function Yelp(request, response){
+  
+}
 
 // function errorFunc(error, request, response) {
 //   response.status(500).send(error);
@@ -176,8 +180,8 @@ function Movies(movie) {
 // app.use(errorFunc);
 
 // client.on('error', err => console.error(err));
-// client.connect((err) => {
-//   if (err) console.log(`${err} you are broken`);
-//   else 
-// });
-app.listen(PORT, () => console.log(`Server is live on Port ${PORT}`));
+client.connect((err) => {
+  if (err) console.log(`${err} you are broken`);
+  else app.listen(PORT, () => console.log(`Server is live on Port ${PORT}`));
+});
+
